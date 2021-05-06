@@ -14,15 +14,16 @@ fn main() {
     //         println!("{} is not accepted.", input);
     //     }
     // }
-    let str = "(a|b)".to_string();
-    let mut lexer = lexer::Lexer::new(str);
-    println!("{:?}", lexer.scan());
-    println!("{:?}", lexer.scan());
-    println!("{:?}", lexer.scan());
-    println!("{:?}", lexer.scan());
-    println!("{:?}", lexer.scan());
-    println!("{:?}", lexer.scan());
-    println!("{:?}", lexer.scan());
+    // let str = "(a|b)".to_string();
+    // let mut lexer = lexer::Lexer::new(str);
+    // println!("{:?}", lexer.scan());
+    // println!("{:?}", lexer.scan());
+    // println!("{:?}", lexer.scan());
+    // println!("{:?}", lexer.scan());
+    // println!("{:?}", lexer.scan());
+    // println!("{:?}", lexer.scan());
+    // println!("{:?}", lexer.scan());
+
 }
 
 // fn transition_nfa(state: i32, character: Option<u8>) -> Result<HashSet<i32>, String> {
