@@ -1,13 +1,5 @@
 use crate::lexer::{Token, TokenKind, Lexer};
-pub enum NodeKind {
-    Union,
-    Star,
-    Concat
-}
-
-pub enum Node {
-
-}
+use crate::node::{Assemble, Character, Union, Concat, Star};
 
 pub struct Parser {
     lexer: Lexer,
@@ -39,58 +31,60 @@ impl Parser {
     // subseq -> star subseq | star
     // star -> factor '*' | factor
     // factor -> '(' subexpr ')' | CHARACTER
-    fn factor(&mut self) -> Result<Node, String> {
+    fn factor(&mut self) -> Result<Box<dyn Assemble>, String>
+    {
         if self.look.kind == TokenKind::LPAREN {
             self.match_parse(TokenKind::LPAREN)?;
             let node = self.subexpr()?;
             self.match_parse(TokenKind::RPAREN)?;
             Ok(node)
         } else {
-            let node = Character(self.look.value);
+            let node = Character::new(self.look.value);
             self.match_parse(TokenKind::CHACTER);
-            Ok(node)
+            Ok(Box::new(node))
         }
     }
 
-    fn star(&mut self) -> Result<Node, String> {
+    fn star(&mut self) -> Result<Box<dyn Assemble>, String>
+    {
         let node = self.factor()?;
         if self.look.kind == TokenKind::OPE_STAR {
             self.match_parse(TokenKind::OPE_STAR)?;
-            node = Star(node)
+            let node = Star::new(*node);
         }
         return Ok(node)
     }
 
-    fn seq(&mut self) -> Result<Node, String> {
+    fn seq(&mut self) -> Result<Box<dyn Assemble>, String> {
         if self.look.kind == TokenKind::LPAREN || self.look.kind == TokenKind::CHACTER {
             return self.subexpr();
         } else {
-            return Character(0x00);
+            return Character::new(0x00);
         }
     }
 
-    fn subseq(&mut self) -> Result<Node, String> {
+    fn subseq(&mut self) -> Result<Box<dyn Assemble>, String> {
         let node1 = self.star()?;
         if self.look.kind == TokenKind::LPAREN || self.look.kind == TokenKind::CHACTER {
             let node2 = self.subseq()?;
-            let node = Concat(node1, node2);
+            let node = Concat::new(node1, node2);
             return Ok(node)
         } else {
             return Ok(node1);
         }
     }
 
-    fn subexpr(&mut self) -> Result<Node, String> {
+    fn subexpr(&mut self) -> Result<Box<dyn Assemble>, String> {
         let node = self.seq()?;
         if self.look.kind == TokenKind::OPE_UNION {
             self.match_parse(TokenKind::OPE_UNION)?;
             let node2 = self.subexpr()?;
-            let node = Union(node, node2);
+            let node = Union::new(node, node2);
         }
         return Ok(node);
     }
 
-    fn expression(&mut self) -> Result<Node, String> {
+    fn expression(&mut self) -> Result<Box<dyn Assemble>, String> {
         let node = self.subexpr()?;
         self.match_parse(TokenKind::EOF)?;
 

@@ -28,8 +28,8 @@ where
 }
 
 pub struct NFAFragment {
-    start: i32,
-    accepts: HashSet<i32>,
+    pub start: i32,
+    pub accepts: HashSet<i32>,
     map: HashMap<(i32, Option<u8>), HashSet<i32>>,
     // (状態、　入力文字)をkeyとし、次の遷移状態の集合を値をして持つ
 }
@@ -44,15 +44,15 @@ impl NFAFragment
         }
     }
 
-    pub fn connect(&mut self, from: i32, character: u8, to: i32) {
-        match self.map.get(&((from, Some(character)))) {
+    pub fn connect(&mut self, from: i32, character: Option<u8>, to: i32) {
+        match self.map.get(&(from, character)) {
             Some(&set) => {
                 set.insert(to);
             }
             None => {
                 let mut set = HashSet::<i32>::new();
                 set.insert(to);
-                self.map.insert((from, Some(character)), set);
+                self.map.insert((from, character), set);
             }
         }
     }
