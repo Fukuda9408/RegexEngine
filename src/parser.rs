@@ -1,6 +1,10 @@
-use crate::lexer::{Token, TokenKind, Lexer};
-use crate::node::{Assemble, Character, Union, Concat, Star};
+use std::collections::HashSet;
 
+use crate::lexer::{Token, TokenKind, Lexer};
+use crate::node::Node;
+use crate::nfa::{NondeterministicFiniteAutomaton, Context, NFAFragment};
+
+#[derive(Debug)]
 pub struct Parser {
     lexer: Lexer,
     look: Token,
@@ -8,10 +12,13 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Self {
-        Parser {
+        let mut parser = Parser {
             lexer,
             look: Token::new(0x00, TokenKind::INITIALIZE)
-        }
+        };
+        // Tokenを一つ読み込む
+        parser.move_parser();
+        parser
     }
 
     pub fn match_parse(&mut self, tag: TokenKind) -> Result<(), String> {
@@ -31,63 +38,76 @@ impl Parser {
     // subseq -> star subseq | star
     // star -> factor '*' | factor
     // factor -> '(' subexpr ')' | CHARACTER
-    fn factor(&mut self) -> Result<Box<dyn Assemble>, String>
+    fn factor(&mut self) -> Result<Node, String>
     {
+        // println!("factor:{:?}", self);
         if self.look.kind == TokenKind::LPAREN {
             self.match_parse(TokenKind::LPAREN)?;
             let node = self.subexpr()?;
             self.match_parse(TokenKind::RPAREN)?;
             Ok(node)
         } else {
-            let node = Character::new(self.look.value);
-            self.match_parse(TokenKind::CHACTER);
-            Ok(Box::new(node))
+            let node = Node::character(self.look.value);
+            self.match_parse(TokenKind::CHACTER)?;
+            Ok(node)
         }
     }
 
-    fn star(&mut self) -> Result<Box<dyn Assemble>, String>
+    fn star(&mut self) -> Result<Node, String>
     {
         let node = self.factor()?;
+        // println!("star:{:?}", self);
         if self.look.kind == TokenKind::OPE_STAR {
             self.match_parse(TokenKind::OPE_STAR)?;
-            let node = Star::new(*node);
+            return Ok(Node::star(node))
         }
         return Ok(node)
     }
 
-    fn seq(&mut self) -> Result<Box<dyn Assemble>, String> {
+    fn seq(&mut self) -> Result<Node, String> {
+        // println!("seq:{:?}", self);
         if self.look.kind == TokenKind::LPAREN || self.look.kind == TokenKind::CHACTER {
-            return self.subexpr();
+            return self.subseq();
         } else {
-            return Character::new(0x00);
+            return Ok(Node::character(0x00));
         }
     }
 
-    fn subseq(&mut self) -> Result<Box<dyn Assemble>, String> {
+    fn subseq(&mut self) -> Result<Node, String> {
         let node1 = self.star()?;
+        // println!("subseq:{:?}", self);
         if self.look.kind == TokenKind::LPAREN || self.look.kind == TokenKind::CHACTER {
             let node2 = self.subseq()?;
-            let node = Concat::new(node1, node2);
+            let node = Node::concat(node1, node2);
             return Ok(node)
         } else {
             return Ok(node1);
         }
     }
 
-    fn subexpr(&mut self) -> Result<Box<dyn Assemble>, String> {
+    fn subexpr(&mut self) -> Result<Node, String> {
         let node = self.seq()?;
+        // println!("subexpr:{:?}", self);
         if self.look.kind == TokenKind::OPE_UNION {
             self.match_parse(TokenKind::OPE_UNION)?;
             let node2 = self.subexpr()?;
-            let node = Union::new(node, node2);
+            return Ok(Node::union(node, node2))
         }
         return Ok(node);
     }
 
-    fn expression(&mut self) -> Result<Box<dyn Assemble>, String> {
+    // pub fn expression(&mut self) -> Result<NondeterministicFiniteAutomaton<impl Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>>, String>
+    pub fn expression(&mut self) -> Result<NFAFragment, String>
+    {
         let node = self.subexpr()?;
+        // println!("expression:{:?}", self);
         self.match_parse(TokenKind::EOF)?;
 
         // NFAの作成
+        let mut context = Context::new();
+        println!("{:?}", node);
+        let fragment = node.assemble(&mut context);
+        Ok(fragment)
+        // Ok(fragment.build())
     }
 }

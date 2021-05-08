@@ -24,6 +24,7 @@ impl Token {
     }
 }
 
+#[derive(Debug)]
 pub struct Lexer {
     string_list: String
 }
