@@ -25,7 +25,24 @@ where
             transition
         }
     }
-
+    pub fn nfa2dfa(self) -> DeterministicFiniteAutomaton<impl Fn(HashSet<i32>, u8) -> HashSet<i32>>
+    {
+        let start_copy = self.start.clone();
+        let expand_start_from_start: HashSet<i32> = vec![start_copy].into_iter().collect();
+        let accept_copy = self.accept.clone();
+        let transition = move |set: HashSet<i32>, character: u8| {
+            let mut ret = HashSet::<i32>::new();
+            for elem in set {
+                ret = &ret | &self.trans(elem, Some(character)).unwrap();
+            }
+            return self.epsilon_expnad(ret)
+        };
+        DeterministicFiniteAutomaton::new(
+            expand_start_from_start,
+            accept_copy,
+            transition
+        )
+    }
     pub fn trans(&self, state: i32, character: Option<u8>) -> Result<HashSet<i32>, String> {
         (self.transition)(state, character)
     }
@@ -153,15 +170,5 @@ impl NonDisjoinSets {
         !(&self.sub & &a_set).is_empty()
     }
 
-    pub fn nfa2dfa<T>(self, nfa: NondeterministicFiniteAutomaton<T>) -> DeterministicFiniteAutomaton
-    where
-        T: Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>
-    {
-        let transition = move |set: HashSet<i32>, character: Option<u8>| {
-            let mut ret = HashSet::<i32>::new();
-            for elem in set {
-                ret = set | 
-            }
-        }
-    }
+
 }
