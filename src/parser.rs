@@ -96,8 +96,7 @@ impl Parser {
         return Ok(node);
     }
 
-    // pub fn expression(&mut self) -> Result<NondeterministicFiniteAutomaton<impl Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>>, String>
-    pub fn expression(&mut self) -> Result<NFAFragment, String>
+    pub fn expression(&mut self) -> Result<NondeterministicFiniteAutomaton<impl Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>>, String>
     {
         let node = self.subexpr()?;
         // println!("expression:{:?}", self);
@@ -107,7 +106,7 @@ impl Parser {
         let mut context = Context::new();
         println!("{:?}", node);
         let fragment = node.assemble(&mut context);
-        Ok(fragment)
-        // Ok(fragment.build())
+        println!("fragment: {:?}", fragment);
+        Ok(fragment.build())
     }
 }

@@ -157,18 +157,3 @@ impl Context {
         self.state_count
     }
 }
-
-struct NonDisjoinSets {
-    sub: HashSet<i32>
-}
-
-// 例えば受理状態である{1, 2, 4}などが要素として含まれる
-// ある集合に受理状態が含まれるかどうかは
-// 受理状態と積をとり交わりがあるなら含まれる、ないなら含まれないと判断できる
-impl NonDisjoinSets {
-    pub fn contains(&self, a_set: HashSet<i32>) -> bool {
-        !(&self.sub & &a_set).is_empty()
-    }
-
-
-}

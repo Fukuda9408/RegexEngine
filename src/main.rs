@@ -1,7 +1,4 @@
-// use regex::nfa;
-use regex::dfa;
-use regex::lexer;
-use regex::parser;
+use regex::regex::Regex;
 
 fn main() {
     // let accepts = vec![1].into_iter().collect();
@@ -24,12 +21,13 @@ fn main() {
     // println!("{:?}", lexer.scan());
     // println!("{:?}", lexer.scan());
     // println!("{:?}", lexer.scan());
-    let str = "a|(bc)*".to_string();
-    let lexer = lexer::Lexer::new(str);
-    let mut parser = parser::Parser::new(lexer);
-    println!("{:?}", parser);
-    let ndf = parser.expression().unwrap();
-    println!("{:?}", ndf);
+    let regex = "(a|b)*".to_string();
+    let regexp = Regex::new(regex).unwrap();
+    if regexp.matches("aa".to_string()) {
+        println!("match");
+    } else {
+        println!("not match");
+    }
 }
 
 // fn transition_nfa(state: i32, character: Option<u8>) -> Result<HashSet<i32>, String> {

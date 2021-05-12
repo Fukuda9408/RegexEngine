@@ -65,7 +65,7 @@ where
         !(&self.dfa.accept & &self.cur_state).is_empty()
     }
 
-    pub fn doea_accept(&mut self, input: &[u8]) -> bool {
+    pub fn does_accept(&mut self, input: &[u8]) -> bool {
         for &alphabet in input.iter() {
             self.do_trantision(alphabet);
         }
