@@ -1,29 +1,21 @@
 use crate::lexer::Lexer;
 use crate::parser::Parser;
-use crate::dfa::{DeterministicFiniteAutomaton, DfaRuntime};
+use crate::dfa::DeterministicFiniteAutomaton;
 
-use std::collections::HashSet;
 
-pub struct Regex<T>
-where
-    T: Fn(HashSet<i32>, u8) -> HashSet<i32>
+pub struct Regex
 {
-    regex: String,
-    dfa: DeterministicFiniteAutomaton<T>,
+    dfa: DeterministicFiniteAutomaton,
 }
 
-impl<T> Regex<T>
-where
-    T: Fn(HashSet<i32>, u8) -> HashSet<i32>
+impl Regex
 {
-    pub fn new(regex: String) -> Result<Regex<impl Fn(HashSet<i32>, u8) -> HashSet<i32>>, String> {
-        let regex_copy = regex.clone();
+    pub fn new(regex: String) -> Result<Regex, String> {
         let lexer = Lexer::new(regex);
         let mut parser = Parser::new(lexer);
         let nfa = parser.expression()?;
         Ok(
             Regex {
-                regex: regex_copy,
                 dfa: nfa.nfa2dfa()
             }
         )

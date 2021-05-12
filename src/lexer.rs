@@ -1,8 +1,8 @@
 #[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
 pub enum TokenKind {
     CHACTER,
-    OPE_UNION,
-    OPE_STAR,
+    OpeUNION,
+    OpeSTAR,
     LPAREN,
     RPAREN,
     EOF,
@@ -45,8 +45,8 @@ impl Lexer {
                     b'\\' => {
                         return Token::new(self.string_list.pop().unwrap() as u8, TokenKind::CHACTER)
                     },
-                    b'|' => return Token::new(c as u8, TokenKind::OPE_UNION),
-                    b'*' => return Token::new(c as u8, TokenKind::OPE_STAR),
+                    b'|' => return Token::new(c as u8, TokenKind::OpeUNION),
+                    b'*' => return Token::new(c as u8, TokenKind::OpeSTAR),
                     b'(' => return Token::new(c as u8, TokenKind::LPAREN),
                     b')' => return Token::new(c as u8, TokenKind::RPAREN),
                     _ => return Token::new(c as u8, TokenKind::CHACTER),

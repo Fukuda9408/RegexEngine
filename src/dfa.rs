@@ -1,19 +1,15 @@
 use std::collections::HashSet;
 
-pub struct DeterministicFiniteAutomaton<T>
-where
-    T: Fn(HashSet<i32>, u8) -> HashSet<i32>
+pub struct DeterministicFiniteAutomaton
 {
     start: HashSet<i32>,
     accept: HashSet<i32>,
-    transition: T,
+    transition: Box<dyn Fn(HashSet<i32>, u8) -> HashSet<i32>>,
 }
 
-impl<T> DeterministicFiniteAutomaton<T>
-where
-    T: Fn(HashSet<i32>, u8) -> HashSet<i32>
+impl DeterministicFiniteAutomaton
 {
-    pub fn new(start: HashSet<i32>, accept: HashSet<i32>, transition: T) -> Self {
+    pub fn new(start: HashSet<i32>, accept: HashSet<i32>, transition: Box<dyn Fn(HashSet<i32>, u8) -> HashSet<i32>>) -> Self {
         DeterministicFiniteAutomaton {
             start,
             accept,
@@ -21,7 +17,7 @@ where
         }
     }
 
-    pub fn get_runtime(&self) -> DfaRuntime<T> {
+    pub fn get_runtime(&self) -> DfaRuntime {
         DfaRuntime::new(self)
     }
 
@@ -30,19 +26,15 @@ where
     }
 }
 
-pub struct DfaRuntime<'a, T>
-where
-    T: Fn(HashSet<i32>, u8) -> HashSet<i32>
+pub struct DfaRuntime<'a>
 {
-    dfa: &'a DeterministicFiniteAutomaton<T>,
+    dfa: &'a DeterministicFiniteAutomaton,
     cur_state: HashSet<i32>
 }
 
-impl<'a, T> DfaRuntime<'a, T>
-where
-    T: Fn(HashSet<i32>, u8) -> HashSet<i32>
+impl<'a> DfaRuntime<'a>
 {
-    pub fn new(dfa: &'a DeterministicFiniteAutomaton<T>) -> Self {
+    pub fn new(dfa: &'a DeterministicFiniteAutomaton) -> Self {
         let cur_state = dfa.start.clone();
         DfaRuntime {
             dfa,
@@ -67,7 +59,9 @@ where
 
     pub fn does_accept(&mut self, input: &[u8]) -> bool {
         for &alphabet in input.iter() {
+            println!("before: current_state: {:?}", self.cur_state);
             self.do_trantision(alphabet);
+            println!("after: current_state: {:?}", self.cur_state);
         }
         self.is_accept_state()
     }

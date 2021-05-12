@@ -4,45 +4,46 @@ use std::collections::VecDeque;
 
 use crate::dfa::DeterministicFiniteAutomaton;
 
-#[derive(Debug)]
-pub struct NondeterministicFiniteAutomaton<T>
-where
-    T: Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>
+pub struct NondeterministicFiniteAutomaton
 {
     start: i32,
     accept: HashSet<i32>,
-    transition: T
+    transition: Box<dyn Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>>
 }
 
-impl<T> NondeterministicFiniteAutomaton<T>
-where
-    T: Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>
+impl NondeterministicFiniteAutomaton
 {
-    pub fn new(start: i32, accept: HashSet::<i32>, transition: T) -> Self {
+    pub fn new(start: i32, accept: HashSet::<i32>, transition: Box<dyn Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>>) -> Self {
         NondeterministicFiniteAutomaton {
             start,
             accept,
             transition
         }
     }
-    pub fn nfa2dfa(self) -> DeterministicFiniteAutomaton<impl Fn(HashSet<i32>, u8) -> HashSet<i32>>
+    pub fn nfa2dfa(self) -> DeterministicFiniteAutomaton
     {
         let start_copy = self.start.clone();
-        let expand_start_from_start: HashSet<i32> = vec![start_copy].into_iter().collect();
+        let expand_start_from_start: HashSet<i32> = self.epsilon_expnad(vec![start_copy].into_iter().collect());
         let accept_copy = self.accept.clone();
         let transition = move |set: HashSet<i32>, character: u8| {
             let mut ret = HashSet::<i32>::new();
             for elem in set {
-                ret = &ret | &self.trans(elem, Some(character)).unwrap();
+                match self.trans(elem, Some(character)) {
+                    Ok(set) => ret = &ret | &set,
+                    Err(_) => continue,
+                }
             }
-            return self.epsilon_expnad(ret)
+            let res = self.epsilon_expnad(ret);
+            return res;
         };
+
         DeterministicFiniteAutomaton::new(
             expand_start_from_start,
             accept_copy,
-            transition
+            Box::new(transition)
         )
     }
+
     pub fn trans(&self, state: i32, character: Option<u8>) -> Result<HashSet<i32>, String> {
         (self.transition)(state, character)
     }
@@ -50,12 +51,11 @@ where
     pub fn epsilon_expnad(&self, set: HashSet<i32>) -> HashSet<i32> {
         let mut que: VecDeque<i32> = set.into_iter().collect();
         let mut done = VecDeque::<i32>::new();
-
         while !que.is_empty() {
             let start = que.pop_back().unwrap();
+            done.push_back(start);
             match self.trans(start, None) {
                 Ok(nexts) => {
-                    done.push_back(start);
                     for next_state in nexts {
                         if !done.contains(&next_state) {
                             que.push_front(next_state)
@@ -122,7 +122,7 @@ impl NFAFragment
         new_frag
     }
 
-    pub fn build(self) -> NondeterministicFiniteAutomaton<impl Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>>
+    pub fn build(self) -> NondeterministicFiniteAutomaton
     {
         let accepts_copy = self.accepts.clone();
         let start_copy = self.start;
@@ -136,7 +136,7 @@ impl NFAFragment
         NondeterministicFiniteAutomaton::new(
             start_copy,
             accepts_copy,
-            t
+            Box::new(t)
         )
     }
 }
@@ -155,5 +155,11 @@ impl Context {
     pub fn new_state(&mut self) -> i32 {
         self.state_count += 1;
         self.state_count
+    }
+}
+
+mod tests {
+    #[test]
+    fn test_epsilon() {
     }
 }

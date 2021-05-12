@@ -1,8 +1,6 @@
-use std::collections::HashSet;
-
 use crate::lexer::{Token, TokenKind, Lexer};
 use crate::node::Node;
-use crate::nfa::{NondeterministicFiniteAutomaton, Context, NFAFragment};
+use crate::nfa::{NondeterministicFiniteAutomaton, Context};
 
 #[derive(Debug)]
 pub struct Parser {
@@ -96,7 +94,7 @@ impl Parser {
         return Ok(node);
     }
 
-    pub fn expression(&mut self) -> Result<NondeterministicFiniteAutomaton<impl Fn(i32, Option<u8>) -> Result<HashSet<i32>, String>>, String>
+    pub fn expression(&mut self) -> Result<NondeterministicFiniteAutomaton, String>
     {
         let node = self.subexpr()?;
         // println!("expression:{:?}", self);
